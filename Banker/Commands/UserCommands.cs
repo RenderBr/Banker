@@ -63,7 +63,7 @@ namespace Banker.Modules
 
             foreach (BankAccount account in topList)
             {
-                Respond($"{topList.IndexOf(account) + 1}. {account.AccountName} - {Math.Round(account.Currency)}", Color.LightGreen);
+                Respond($"{topList.IndexOf(account) + 1}. {account.AccountName} - {Math.Round(account.Currency)} {(account.Currency == 1 ? _settings.CurrencyNameSingular : _settings.CurrencyNamePlural)}", Color.LightGreen);
             }
             return ExecuteResult.FromSuccess();
         }
