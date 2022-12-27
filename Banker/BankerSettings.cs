@@ -1,20 +1,15 @@
-﻿using System;
+﻿using Auxiliary.Configuration;
 using System.Collections.Generic;
-using System.Text;
-using System.IO;
-using TShockAPI;
-using Newtonsoft.Json;
-using Auxiliary.Configuration;
 using System.Text.Json.Serialization;
 
 namespace Banker
 {
-	public class BankerSettings : ISettings
-	{
-		[JsonPropertyName("CurrencyNameSingular")]
-		public string CurrencyNameSingular { get; set; } = "dollar";
-        
-		[JsonPropertyName("CurrencyNamePlural")]
+    public class BankerSettings : ISettings
+    {
+        [JsonPropertyName("CurrencyNameSingular")]
+        public string CurrencyNameSingular { get; set; } = "dollar";
+
+        [JsonPropertyName("CurrencyNamePlural")]
         public string CurrencyNamePlural { get; set; } = "dollars";
 
         [JsonPropertyName("ExcludedMobs")]
@@ -22,8 +17,8 @@ namespace Banker
 
         [JsonPropertyName("EnableMobDrops")]
         public bool EnableMobDrops { get; set; } = false;
-        
-		[JsonPropertyName("AnnounceMobDrops")]
+
+        [JsonPropertyName("AnnounceMobDrops")]
         public bool AnnounceMobDrops { get; set; } = true;
 
         [JsonPropertyName("RewardsForPlaying")]
@@ -34,8 +29,5 @@ namespace Banker
 
         [JsonPropertyName("PercentageDroppedOnDeath")]
         public double PercentageDroppedOnDeath { get; set; } = 0;
-
-		
-		}
-
-	}
+    }
+}

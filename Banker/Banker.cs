@@ -18,11 +18,20 @@ namespace Banker
     public class Banker : TerrariaPlugin
     {
         private Timer _rewardTimer;
-        public override string Name => "Banker";
-        public override Version Version => new Version(1, 0, 0);
-        public override string Author => "Average";
-        public override string Description => "An economy plugin intended to be used on TBC.";
         private readonly TSCommandFramework _fx;
+
+        public override string Name
+            => "Banker";
+
+        public override Version Version
+            => new(1, 0, 0);
+
+        public override string Author
+            => "Average";
+
+        public override string Description
+            => "An economy plugin intended to be used on TBC.";
+
         public Banker(Main game) : base(game)
         {
             _fx = new(new()
@@ -45,7 +54,7 @@ namespace Banker
             ServerApi.Hooks.NetSendData.Register(this, OnNpcStrike);
 
             #region Reward Timer initialization
-            if(Configuration<BankerSettings>.Settings.RewardsForPlaying)
+            if (Configuration<BankerSettings>.Settings.RewardsForPlaying)
             {
                 _rewardTimer = new(Configuration<BankerSettings>.Settings.RewardTimer)
                 {
@@ -56,7 +65,7 @@ namespace Banker
                 _rewardTimer.Start();
             }
 
-    
+
             #endregion
 
             await _fx.BuildModulesAsync(typeof(Banker).Assembly);
@@ -73,7 +82,7 @@ namespace Banker
                 player.Currency -= toLose;
                 if (settings.AnnounceMobDrops)
                 {
-                    args.Player.SendMessage($"You lost {toLose} {((toLose == 1) ? settings.CurrencyNameSingular : settings.CurrencyNamePlural) } from dying!", Color.Orange);
+                    args.Player.SendMessage($"You lost {toLose} {((toLose == 1) ? settings.CurrencyNameSingular : settings.CurrencyNamePlural)} from dying!", Color.Orange);
                     return;
                 }
             }
@@ -87,9 +96,8 @@ namespace Banker
         {
             BankerSettings settings = Configuration<BankerSettings>.Settings;
 
-
             if (args.MsgId != PacketTypes.NpcStrike)
-            { 
+            {
                 return;
             }
 
@@ -113,19 +121,19 @@ namespace Banker
                 return;
             }
 
-                color = Color.Gold;
+            color = Color.Gold;
 
             if (npc.type != NPCID.TargetDummy && !npc.SpawnedFromStatue)
             {
-        
+
                 int totalGiven = 1;
 
 
                 if (settings.ExcludedMobs.Count > 0)
                 {
-                    foreach(var mob in settings.ExcludedMobs)
+                    foreach (var mob in settings.ExcludedMobs)
                     {
-                        if(npc.netID == mob)
+                        if (npc.netID == mob)
                         {
                             return;
                         }
@@ -222,16 +230,6 @@ namespace Banker
                 var player = await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName == plr.Account.Name), x => x.AccountName = plr.Account.Name);
                 player.Currency++;
             }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                ServerApi.Hooks.NetSendData.Deregister(this, OnNpcStrike);
-                TShockAPI.GetDataHandlers.KillMe -= PlayerDead;
-            }
-            base.Dispose(disposing);
         }
     }
 }

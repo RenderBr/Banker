@@ -1,12 +1,9 @@
-﻿using Auxiliary.Configuration;
-using Auxiliary;
+﻿using Auxiliary;
+using Auxiliary.Configuration;
 using Banker.Models;
 using CSF;
 using CSF.TShock;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using TShockAPI;
 
@@ -15,7 +12,7 @@ namespace Banker.Modules
     [RequirePermission("tbc.staff")]
     internal class StaffCommands : TSModuleBase<TSCommandContext>
     {
-        BankerSettings settings = Configuration<BankerSettings>.Settings;
+        readonly BankerSettings _settings = Configuration<BankerSettings>.Settings;
 
         [Command("givebal", "gb")]
         [Description("Gives the user currency forcefully.")]
@@ -23,32 +20,28 @@ namespace Banker.Modules
         {
             // no args
             if (user == "")
-            {
                 return Error("Please enter a username! Ex. /gb Markeyex <quantity>");
-            }
-            if(pay == null)
-            {
+
+            if (pay == null)
                 return Error($"Please enter a quantity to give to the user! Ex. /gb {user} 1000");
-            }
-            if(pay <= 0)
-            {
+
+            if (pay <= 0)
                 return Error($"Please enter a valid quantity, must be a positive number! (You entered: {pay})");
-            }
 
             var paidUser = await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName.ToLower() == user.ToLower()));
 
-            if(paidUser == null)
+            if (paidUser == null)
             {
                 return Error($"Invalid player name!");
             }
 
             paidUser.Currency += (float)pay;
-            if(TSPlayer.FindByNameOrID(user).Count > 0)
+            if (TSPlayer.FindByNameOrID(user).Count > 0)
             {
                 var player = TSPlayer.FindByNameOrID(user).FirstOrDefault();
-                player.SendSuccessMessage($"{Context.Player.Name} has added {pay} {((pay == 1) ? settings.CurrencyNameSingular : settings.CurrencyNamePlural)} to your account! Your new balance is: {paidUser.Currency}!");
+                player.SendSuccessMessage($"{Context.Player.Name} has added {pay} {((pay == 1) ? _settings.CurrencyNameSingular : _settings.CurrencyNamePlural)} to your account! Your new balance is: {paidUser.Currency}!");
             }
-            return Success($"You have successfully added {pay} {((pay == 1) ? settings.CurrencyNameSingular : settings.CurrencyNamePlural)} to {user}'s account!");
+            return Success($"You have successfully added {pay} {((pay == 1) ? _settings.CurrencyNameSingular : _settings.CurrencyNamePlural)} to {user}'s account!");
 
         }
 
@@ -58,32 +51,26 @@ namespace Banker.Modules
         {
             // no args
             if (user == "")
-            {
                 return Error("Please enter a username! Ex. /tb Razyer <quantity>");
-            }
+
             if (pay == null)
-            {
                 return Error($"Please enter a quantity to take from the user! Ex. /tb {user} 1000");
-            }
+
             if (pay <= 0)
-            {
                 return Error($"Please enter a valid quantity, must be a positive number! (You entered: {pay})");
-            }
 
             var paidUser = await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName.ToLower() == user.ToLower()));
 
             if (paidUser == null)
-            {
                 return Error($"Invalid player name!");
-            }
 
             paidUser.Currency -= (float)pay;
             if (TSPlayer.FindByNameOrID(user).Count > 0)
             {
                 var player = TSPlayer.FindByNameOrID(user).FirstOrDefault();
-                player.SendInfoMessage($"{Context.Player.Name} has taken away {pay} {((pay == 1) ? settings.CurrencyNameSingular : settings.CurrencyNamePlural)} from your account! Your new balance is: {paidUser.Currency}.");
+                player.SendInfoMessage($"{Context.Player.Name} has taken away {pay} {((pay == 1) ? _settings.CurrencyNameSingular : _settings.CurrencyNamePlural)} from your account! Your new balance is: {paidUser.Currency}.");
             }
-            return Success($"You have successfully removed {pay} {((pay == 1) ? settings.CurrencyNameSingular : settings.CurrencyNamePlural)} from {user}'s account!");
+            return Success($"You have successfully removed {pay} {((pay == 1) ? _settings.CurrencyNameSingular : _settings.CurrencyNamePlural)} from {user}'s account!");
         }
 
         [Command("setbal", "sb", "ecoset", "seteco")]
@@ -92,32 +79,26 @@ namespace Banker.Modules
         {
             // no args
             if (user == "")
-            {
-                return Error("Please enter a username! Ex. /sb Trifle 10000");
-            }
+                return Error("Please enter a username! Ex. /sb Trifle 10000");  
+
             if (pay == null)
-            {
                 return Error($"Please enter a quantity to set this user's balance to! Ex. /sb {user} 1000");
-            }
+
             if (pay <= 0)
-            {
                 return Error($"Please enter a valid quantity, must be a positive number! (You entered: {pay})");
-            }
 
             var paidUser = await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName.ToLower() == user.ToLower()));
 
             if (paidUser == null)
-            {
                 return Error($"Invalid player name!");
-            }
 
             paidUser.Currency = (float)pay;
             if (TSPlayer.FindByNameOrID(user).Count > 0)
             {
                 var player = TSPlayer.FindByNameOrID(user).FirstOrDefault();
-                player.SendInfoMessage($"{Context.Player.Name} has set your bank account to: {pay} {((pay == 1) ? settings.CurrencyNameSingular : settings.CurrencyNamePlural)}.");
+                player.SendInfoMessage($"{Context.Player.Name} has set your bank account to: {pay} {((pay == 1) ? _settings.CurrencyNameSingular : _settings.CurrencyNamePlural)}.");
             }
-            return Success($"You have successfully set {user}'s bank account to {pay} {((pay == 1) ? settings.CurrencyNameSingular : settings.CurrencyNamePlural)}");
+            return Success($"You have successfully set {user}'s bank account to {pay} {((pay == 1) ? _settings.CurrencyNameSingular : _settings.CurrencyNamePlural)}");
         }
 
 
@@ -127,16 +108,12 @@ namespace Banker.Modules
         {
             // no args
             if (user == "")
-            {
                 return Error("Please enter a username! Ex. /rb rozen");
-            }
 
             var paidUser = await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName.ToLower() == user.ToLower()));
 
             if (paidUser == null)
-            {
                 return Error($"Invalid player name!");
-            }
 
             paidUser.Currency = 0;
             if (TSPlayer.FindByNameOrID(user).Count > 0)
