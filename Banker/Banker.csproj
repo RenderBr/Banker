@@ -4,6 +4,8 @@
     <OutputType>Library</OutputType>
 
 	<NoWarn>MSB3270</NoWarn>
+
+	<Version>1.1</Version>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CSF.NET.TShock" Version="1.4.0" />
