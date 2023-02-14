@@ -11,7 +11,12 @@ namespace Banker.Api
     {
         public async Task<float> GetCurrency(TSPlayer Player)
         {
-            var player = await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName == Player.Account.Name), x => x.AccountName = Player.Account.Name);
+            return await GetCurrency(Player.Account.Name);
+        }
+
+        public async Task<float> GetCurrency(string Player)
+        {
+            var player = await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName == Player), x => x.AccountName = Player);
             if (player == null)
                 return -1;
 

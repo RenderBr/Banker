@@ -30,12 +30,11 @@ namespace Banker.Modules
             }
             else
             {
-                float balance = await Banker.api.GetCurrency(Context.Player);
+                float balance = await Banker.api.GetCurrency(user);
 
                 if (balance == -1)
-                {
                     return Error("Invalid player name! Try using their user account name.");
-                }
+                
                 return Respond($"{user} currently has {Math.Round(balance)} {(balance == 1 ? _settings.CurrencyNameSingular : _settings.CurrencyNamePlural)}", Color.LightGoldenrodYellow);
 
             }
