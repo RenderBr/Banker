@@ -25,22 +25,18 @@ namespace Banker.Modules
             // no args
             if (user == "")
             {
-                var player = await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName == Context.Player.Account.Name), x => x.AccountName = Context.Player.Account.Name);
-
-                float balance = player.Currency;
-
+                float balance = await Banker.api.GetCurrency(Context.Player);
                 return Respond($"You currently have {Math.Round(balance)} {(balance == 1 ? _settings.CurrencyNameSingular : _settings.CurrencyNamePlural)}", Color.LightGoldenrodYellow);
             }
             else
             {
-                var userBank = await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName.ToLower() == user.ToLower()));
+                float balance = await Banker.api.GetCurrency(Context.Player);
 
-                if (userBank == null)
+                if (balance == -1)
                 {
                     return Error("Invalid player name! Try using their user account name.");
                 }
-                float balance = userBank.Currency;
-                return Respond($"{userBank.AccountName} currently has {Math.Round(balance)} {(balance == 1 ? _settings.CurrencyNameSingular : _settings.CurrencyNamePlural)}", Color.LightGoldenrodYellow);
+                return Respond($"{user} currently has {Math.Round(balance)} {(balance == 1 ? _settings.CurrencyNameSingular : _settings.CurrencyNamePlural)}", Color.LightGoldenrodYellow);
 
             }
         }
@@ -49,15 +45,7 @@ namespace Banker.Modules
         [Description("Shows the top ten users with the highest balance.")]
         public async Task<IResult> TopBalance()
         {
-            var player = await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName == Context.Player.Account.Name), x => x.AccountName = Context.Player.Account.Name);
-
-            int limit = 10;
-            int e = (int)StorageProvider.GetMongoCollection<BankAccount>("BankAccounts").Find(x => true).SortByDescending(x => x.Currency).CountDocuments();
-            if (e < limit)
-            {
-                limit = e;
-            }
-            List<BankAccount> topList = StorageProvider.GetMongoCollection<BankAccount>("BankAccounts").Find(x => true).SortByDescending(x => x.Currency).Limit(limit).ToList();
+            List<BankAccount> topList = Banker.api.TopBalances(8);
 
             Respond($"Top Users by Balance (/baltop)", Color.LightGoldenrodYellow);
 
@@ -76,38 +64,28 @@ namespace Banker.Modules
         {
             // no args
             if (user == "")
-            {
                 return Error("Please enter a username! Ex. /pay Ollie <quantity>");
-            }
+            
             if (pay == null)
-            {
                 return Error($"Please enter a quantity to pay the user! Ex. /pay {user} 1000");
-            }
+            
             if (pay <= 0)
-            {
                 return Error($"Please enter a valid quantity, must be a positive number! (You entered: {pay})");
-            }
+            
             if (user == Context.Player.Name)
-            {
                 return Error($"You cannot pay yourself money!");
-            }
 
-            var paidUser = await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName.ToLower() == user.ToLower()));
-            var payingUser = await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName == Context.Player.Name));
+            var paidUser = await Banker.api.RetrieveBankAccount(user);
+            var payingUser = await Banker.api.RetrieveBankAccount(Context.Player.Account.Name);
 
             if (paidUser == null)
-            {
                 return Error("Invalid player name!");
-            }
+            
             if (payingUser == null)
-            {
                 return Error("Something went wrong!");
-            }
 
             if (!(payingUser.Currency >= pay))
-            {
                 return Error($"You do not have enough money to make this payment! You need: {pay - payingUser.Currency} {((pay == 1) ? _settings.CurrencyNameSingular : _settings.CurrencyNamePlural)}");
-            }
 
             payingUser.Currency -= (float)pay;
             paidUser.Currency += (float)pay;

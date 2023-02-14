@@ -28,12 +28,10 @@ namespace Banker.Modules
             if (pay <= 0)
                 return Error($"Please enter a valid quantity, must be a positive number! (You entered: {pay})");
 
-            var paidUser = await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName.ToLower() == user.ToLower()));
+            var paidUser = await Banker.api.RetrieveBankAccount(user);
 
             if (paidUser == null)
-            {
                 return Error($"Invalid player name!");
-            }
 
             paidUser.Currency += (float)pay;
             if (TSPlayer.FindByNameOrID(user).Count > 0)
@@ -59,7 +57,7 @@ namespace Banker.Modules
             if (pay <= 0)
                 return Error($"Please enter a valid quantity, must be a positive number! (You entered: {pay})");
 
-            var paidUser = await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName.ToLower() == user.ToLower()));
+            var paidUser = await Banker.api.RetrieveBankAccount(user);
 
             if (paidUser == null)
                 return Error($"Invalid player name!");
@@ -87,7 +85,7 @@ namespace Banker.Modules
             if (pay <= 0)
                 return Error($"Please enter a valid quantity, must be a positive number! (You entered: {pay})");
 
-            var paidUser = await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName.ToLower() == user.ToLower()));
+            var paidUser = await Banker.api.RetrieveBankAccount(user);
 
             if (paidUser == null)
                 return Error($"Invalid player name!");
@@ -110,7 +108,7 @@ namespace Banker.Modules
             if (user == "")
                 return Error("Please enter a username! Ex. /rb rozen");
 
-            var paidUser = await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName.ToLower() == user.ToLower()));
+            var paidUser = await Banker.api.RetrieveBankAccount(user);
 
             if (paidUser == null)
                 return Error($"Invalid player name!");

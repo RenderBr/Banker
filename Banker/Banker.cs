@@ -1,5 +1,6 @@
 ﻿using Auxiliary;
 using Auxiliary.Configuration;
+using Banker.Api;
 using Banker.Models;
 using CSF.TShock;
 using Microsoft.Xna.Framework;
@@ -17,20 +18,24 @@ namespace Banker
     [ApiVersion(2, 1)]
     public class Banker : TerrariaPlugin
     {
+        public static BankerApi api = new();
+
         private Timer _rewardTimer;
         private readonly TSCommandFramework _fx;
 
+        #region Plugin metadata
         public override string Name
             => "Banker";
 
         public override Version Version
-            => new(1, 0, 0);
+            => new(1, 1);
 
         public override string Author
             => "Average";
 
         public override string Description
             => "An economy plugin intended to be used on TBC.";
+        #endregion
 
         public Banker(Main game) : base(game)
         {
@@ -77,7 +82,7 @@ namespace Banker
             {
                 BankerSettings settings = Configuration<BankerSettings>.Settings;
 
-                var player = await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName == args.Player.Account.Name), x => x.AccountName = args.Player.Account.Name);
+                var player = await api.RetrieveOrCreateBankAccount(args.Player.Account.Name);
                 var toLose = (float)(player.Currency * settings.PercentageDroppedOnDeath);
                 player.Currency -= toLose;
                 if (settings.AnnounceMobDrops)
@@ -97,29 +102,21 @@ namespace Banker
             BankerSettings settings = Configuration<BankerSettings>.Settings;
 
             if (args.MsgId != PacketTypes.NpcStrike)
-            {
                 return;
-            }
 
             if (settings.EnableMobDrops == false)
-            {
                 return;
-            }
-
+            
             var npc = Main.npc[args.number];
 
             if (args.ignoreClient == -1)
-            {
                 return;
-            }
 
             var player = TSPlayer.FindByNameOrID(args.ignoreClient.ToString())[0];
             Color color;
 
             if (!(npc.life <= 0))
-            {
                 return;
-            }
 
             color = Color.Gold;
 
@@ -134,9 +131,7 @@ namespace Banker
                     foreach (var mob in settings.ExcludedMobs)
                     {
                         if (npc.netID == mob)
-                        {
                             return;
-                        }
                     }
                 }
 
@@ -202,16 +197,12 @@ namespace Banker
                     color = Color.Red;
                 }
 
-                var Player = await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName == player.Account.Name), x => x.AccountName = player.Account.Name);
+                var Player = await api.RetrieveOrCreateBankAccount(player.Account.Name);
                 Player.Currency += totalGiven;
 
-                if (settings.AnnounceMobDrops == false)
-                {
-                    return;
-                }
+                if (settings.AnnounceMobDrops == true)
+                    player.SendMessage($"+ {totalGiven} {((totalGiven == 1) ? settings.CurrencyNameSingular : settings.CurrencyNamePlural)} from killing {npc.FullName}", color);
 
-
-                player.SendMessage($"+ {totalGiven} {((totalGiven == 1) ? settings.CurrencyNameSingular : settings.CurrencyNamePlural)} from killing {npc.FullName}", color);
                 return;
             }
         }
@@ -221,13 +212,12 @@ namespace Banker
             foreach (TSPlayer plr in TShock.Players)
             {
                 if (plr is null || !(plr.Active && plr.IsLoggedIn))
-                {
                     continue;
-                }
+                
                 if (plr.Account is null)
                     continue;
 
-                var player = await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName == plr.Account.Name), x => x.AccountName = plr.Account.Name);
+                var player = await api.RetrieveOrCreateBankAccount(plr.Account.Name);
                 player.Currency++;
             }
         }
