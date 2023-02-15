@@ -1,7 +1,9 @@
 ﻿using Auxiliary;
 using Banker.Models;
+using IL.Terraria.GameContent.Bestiary;
 using MongoDB.Driver;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TShockAPI;
 
@@ -9,6 +11,108 @@ namespace Banker.Api
 {
     public class BankerApi
     {
+        public async Task<JointAccount> CreateJointAccount(TSPlayer player, string name)
+        {
+            JointAccount acc = null;
+
+            if(await IsAlreadyInJointAccount(player) == true)
+                return acc;
+
+            if(await IModel.GetAsync(GetRequest.Bson<JointAccount>(x => x.Name == name)) == null)
+            {
+                acc = await IModel.GetAsync(GetRequest.Bson<JointAccount>(x => x.Name == name), x =>
+                {
+                    x.Currency = 0;
+                    x.Accounts = new List<string>() { player.Account.Name };
+                    x.Name = name;
+                });
+
+            }
+
+            return acc;
+        }
+
+        public async Task GetBalanceOfJointAccount(string jointAccount)
+            => await RetrieveJointAccount(jointAccount).GetAwaiter().GetResult().GetCurrency();
+
+        public async Task<bool> UpdateJointBalance(string jointAccount, int newAmount)
+        {
+            var acc = await RetrieveJointAccount(jointAccount);
+
+            if (acc == null)
+                return false;
+
+            acc.UpdateCurrency(newAmount);
+            return true;
+        }
+
+        public async Task<JointAccount> RetrieveJointAccount(string jointAccount)
+            => await IModel.GetAsync(GetRequest.Bson<JointAccount>(x => x.Name == jointAccount));
+
+        public async Task<bool> AddUserToJointAccount(TSPlayer player, string jointAccount)
+            => await AddUserToJointAccount(player.Account.Name, jointAccount);
+
+        public async Task<bool> AddUserToJointAccount(string player, string jointAccount)
+        {
+            var acc = await RetrieveOrCreateBankAccount(player);
+
+            if (await IsAlreadyInJointAccount(player) == true)
+                return false;
+
+            acc.JointAccount = jointAccount;
+            var joint = await RetrieveJointAccount(jointAccount);
+
+            var temp = joint.Accounts;
+
+            temp.Add(player);
+
+            return true;
+        }
+
+        public async Task<bool> RemoveUserFromJointAccount(string player, string jointAccount)
+        {
+            var acc = await RetrieveOrCreateBankAccount(player);
+
+            if (await IsAlreadyInJointAccount(player) == false)
+                return false;
+
+            var joint = await RetrieveJointAccount(jointAccount);
+
+            var temp = joint.Accounts;
+
+            temp.Remove(player);
+            acc.JointAccount = string.Empty;
+
+            return true;
+        }
+
+        public async Task<JointAccount> GetJointAccountOfPlayer(string player)
+        {
+            var p = await RetrieveBankAccount(player);
+
+            if(p.JointAccount != string.Empty)
+            {
+                return await RetrieveJointAccount(p.JointAccount);
+            }
+            return null;
+        }
+
+        public async Task<JointAccount> GetJointAccountOfPlayer(TSPlayer player)
+            => await GetJointAccountOfPlayer(player.Account.Name);
+
+        public async Task<bool> IsAlreadyInJointAccount(TSPlayer player) =>
+                await IsAlreadyInJointAccount(player.Account.Name);
+
+        public async Task<bool> IsAlreadyInJointAccount(string player)
+        {
+            var acc = await RetrieveBankAccount(player);
+
+            if (string.IsNullOrEmpty(acc.JointAccount))
+                return false;
+
+            return true;
+        }
+
         public async Task<float> GetCurrency(TSPlayer Player)
         {
             return await GetCurrency(Player.Account.Name);
@@ -21,6 +125,29 @@ namespace Banker.Api
                 return -1;
 
             return player.Currency;
+        }
+
+        /// <summary>
+        /// Resets the currency of a player to 0
+        /// </summary>
+        /// <param name="Player"></param>
+        /// <returns></returns>
+        public async void ResetCurrency(string Player)
+        {
+            await UpdateCurrency(Player, 0);
+        }
+
+        public async Task<bool> UpdateCurrency(TSPlayer player, float amount)
+            => await UpdateCurrency(player.Account.Name, amount);
+
+        public async Task<bool> UpdateCurrency(string Player, float amount)
+        {
+            var player = await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName == Player), x => x.AccountName = Player);
+            if (player == null)
+                return false;
+
+            player.Currency += amount;
+            return true;
         }
 
         public List<BankAccount> TopBalances(int limit = 10)

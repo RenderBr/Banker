@@ -9,5 +9,9 @@ namespace Banker.Models
 
         private float _currency;
         public float Currency { get => _currency; set { _ = this.SaveAsync(x => x.Currency, value); _currency = value; } }
+
+        public string _jointAccount = string.Empty;
+
+        public string JointAccount { get => _jointAccount; set { _ = this.SaveAsync(x => x.JointAccount, value); _jointAccount = value; } }
     }
 }

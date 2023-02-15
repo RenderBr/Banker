@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TShockAPI;
+using TShockAPI.DB;
 
 namespace Banker.Modules
 {
@@ -38,6 +39,62 @@ namespace Banker.Modules
                 return Respond($"{user} currently has {Math.Round(balance)} {(balance == 1 ? _settings.CurrencyNameSingular : _settings.CurrencyNamePlural)}", Color.LightGoldenrodYellow);
 
             }
+        }
+
+        [Command("jointbank", "joint", "jointaccount", "jointacc")]
+        [Description("Joint bank account manager. Create a joint account with another player.")]
+        public async Task<IResult> JointBank(string sub = "", string args1 = "", string args2 = "")
+        {
+            switch (sub)
+            {
+                default:
+                case "":
+                case "help":
+                    Info("Joint banking? What is it!");
+                    Respond("You can now make joint bank accounts with your friends. Each of you can take and add money into it at any time.");
+                    Respond("Once somebody has been added to it, they cannot be removed unless they voluntarily leave. The commands are:");
+                    Respond("/joint create <name>");
+                    Respond("/joint invite <name>");
+                    Respond("/joint accept <name>");
+                    Respond("/joint deny");
+                    Respond("/joint take <amount>");
+                    Respond("/joint deposit <amount>");
+                    Respond("/joint leave");
+                    return Success("Enjoy joint banking!");
+                case "make":
+                case "create":
+                    {
+                        if (args1 == "")
+                            return Error("Please enter a name for your joint account!");
+
+                        JointAccount acc = await Banker.api.CreateJointAccount(Context.Player, args1);
+
+                        if (acc == null)
+                            return Error("Either you are already in a joint account or there is one by that name!");
+
+                        return Success("Congratz! You now have a joint account.");
+                    }
+                case "invite":
+                    {
+                        if (args1 == "")
+                            return Error("Please enter the name of a player you want to invite!");
+
+                        var joint = await Banker.api.GetJointAccountOfPlayer(Context.Player);
+                        if (joint == null)
+                            return Error("You are not in a joint account!");
+
+
+                        var acc = TShock.UserAccounts.GetUserAccountByName(args1);
+                        if (acc == null)
+                            return Error("The player name you entered was invalid!");
+
+                        await Banker.api.AddUserToJointAccount(acc.Name, joint.Name);
+                        return Success("You have invited " + acc.Name + " to your joint account!");
+
+                        //LEAVE OFF HERE
+                    }
+            }
+
         }
 
         [Command("baltop", "topbal", "topbalance", "leaderboard")]
