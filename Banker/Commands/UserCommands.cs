@@ -55,12 +55,39 @@ namespace Banker.Modules
                     Respond("Once somebody has been added to it, they cannot be removed unless they voluntarily leave. The commands are:");
                     Respond("/joint create <name>");
                     Respond("/joint invite <name>");
-                    Respond("/joint accept <name>");
+                    Respond("/joint accept");
                     Respond("/joint deny");
                     Respond("/joint take <amount>");
                     Respond("/joint deposit <amount>");
                     Respond("/joint leave");
                     return Success("Enjoy joint banking!");
+                case "accept":
+                    {
+                        if (String.IsNullOrEmpty(Context.Player.GetData<string>("jointinvite")) || Context.Player.GetData<string>("jointinvite") == "N.A")
+                            return Error("You have not been invited to any joint accounts");
+
+                        var invite = Context.Player.GetData<string>("jointinvite");
+
+                        var acc = await Banker.api.RetrieveOrCreateBankAccount(Context.Player);
+
+                        var success = await Banker.api.AddUserToJointAccount(Context.Player, invite);
+
+                        if (success)
+                        {
+                            Context.Player.RemoveData("jointinvite");
+                            return Success("You've joined " + invite);
+                        }
+                        else
+                        {
+                            return Error("Something went wrong!");
+                        }
+                    }
+                case "deny":
+                    if (String.IsNullOrEmpty(Context.Player.GetData<string>("jointinvite")) || Context.Player.GetData<string>("jointinvite") == "N.A")
+                        return Error("You have not been invited to any joint accounts");
+
+                    Context.Player.RemoveData("jointinvite");
+                    return Success("You rejected the invite!");
                 case "make":
                 case "create":
                     {
@@ -88,10 +115,16 @@ namespace Banker.Modules
                         if (acc == null)
                             return Error("The player name you entered was invalid!");
 
-                        await Banker.api.AddUserToJointAccount(acc.Name, joint.Name);
-                        return Success("You have invited " + acc.Name + " to your joint account!");
+                        var success = await Banker.api.InviteUserToJointAccount(acc.Name, joint.Name);
 
-                        //LEAVE OFF HERE
+                        if (success)
+                        {
+                            return Success("You have invited " + acc.Name + " to your joint account!");
+                        }
+                        else
+                        {
+                            return Error("That player is already apart of a joint account!");
+                        }
                     }
             }
 

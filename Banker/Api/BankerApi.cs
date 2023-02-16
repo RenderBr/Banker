@@ -1,9 +1,13 @@
 ﻿using Auxiliary;
 using Banker.Models;
 using IL.Terraria.GameContent.Bestiary;
+using Microsoft.Xna.Framework;
 using MongoDB.Driver;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using TShockAPI;
 
@@ -66,6 +70,22 @@ namespace Banker.Api
 
             temp.Add(player);
 
+            return true;
+        }
+
+        public async Task<bool> InviteUserToJointAccount(string player, string jointAccount)
+        {
+            var acc = await GetJointAccountOfPlayer(player);
+
+            if (acc != null) {
+                return false;
+            }
+
+            var p = TSPlayer.FindByNameOrID(player).First();
+            p.SetData<string>("jointinvite", jointAccount);
+            
+            p.SendMessage("You have been invited to join a joint bank account: " + jointAccount, Color.Yellow);
+            p.SendMessage("Accept the request with /joint accept, or deny it with /joint deny. ", Color.Yellow);
             return true;
         }
 
@@ -159,6 +179,12 @@ namespace Banker.Api
             
             return StorageProvider.GetMongoCollection<BankAccount>("BankAccounts").Find(x => true).SortByDescending(x => x.Currency).Limit(limit).ToList();
         }
+
+        public async Task<BankAccount> RetrieveBankAccount(TSPlayer player)
+            => await RetrieveBankAccount(player.Account.Name);
+
+        public async Task<BankAccount> RetrieveOrCreateBankAccount(TSPlayer player)
+            => await RetrieveOrCreateBankAccount(player.Account.Name);
 
         public async Task<BankAccount> RetrieveBankAccount(string name)
             => await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName.ToLower() == name.ToLower()));
