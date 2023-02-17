@@ -9,12 +9,20 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Terraria.ID;
 using TShockAPI;
 
 namespace Banker.Api
 {
     public class BankerApi
     {
+        public List<NpcCustomAmount> npcCustomAmounts = new List<NpcCustomAmount>()
+        {
+            new NpcCustomAmount(NPCID.EyeofCthulhu, 100, Color.Red),
+            new NpcCustomAmount(NPCID.EaterofWorldsHead, 100, Color.MediumPurple),
+            new NpcCustomAmount(NPCID.BrainofCthulhu, 100, Color.Red),
+        };
+
         public async Task<JointAccount> CreateJointAccount(TSPlayer player, string name)
         {
             JointAccount acc = null;

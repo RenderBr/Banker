@@ -4,6 +4,7 @@ using Banker.Api;
 using Banker.Models;
 using CSF.TShock;
 using Microsoft.Xna.Framework;
+using MongoDB.Driver.Linq;
 using System;
 using System.Threading.Tasks;
 using System.Timers;
@@ -135,30 +136,34 @@ namespace Banker
                     }
                 }
 
-                if (npc.netID == NPCID.EyeofCthulhu)
+                NpcCustomAmount customAmount = api.npcCustomAmounts.Where(x => x.npcID == npc.netID).FirstOrDefault();
+
+                switch (npc.netID)
                 {
-                    totalGiven = 100;
-                    color = Color.IndianRed;
-                }
-
-                if (npc.netID == NPCID.EaterofWorldsBody)
-                {
-                    totalGiven = 150;
-                    color = Color.MediumPurple;
-                }
-
-
-                if (npc.netID == NPCID.SkeletronHead)
-                {
-                    totalGiven = 150;
-                    color = Color.Gray;
-                }
-
-
-                if (npc.netID == NPCID.Skeleton)
-                {
-                    totalGiven = 3;
-                    color = Color.Gray;
+                    case NPCID.EyeofCthulhu:
+                        {
+                            totalGiven = 100;
+                            color = Color.IndianRed;
+                            break;
+                        }
+                    case NPCID.EaterofWorldsBody:
+                        {
+                            totalGiven = 150;
+                            color = Color.MediumPurple;
+                            break;
+                        }
+                    case NPCID.SkeletronHead:
+                    {
+                        totalGiven = 150;
+                        color = Color.Gray;
+                        break;
+                    }
+                    case NPCID.Skeleton:
+                        {
+                            totalGiven = 3;
+                            color = Color.Gray;
+                            break;
+                        }
                 }
 
                 if (npc.netID == NPCID.Pinky)

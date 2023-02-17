@@ -61,6 +61,55 @@ namespace Banker.Modules
                     Respond("/joint deposit <amount>");
                     Respond("/joint leave");
                     return Success("Enjoy joint banking!");
+                case "take":
+                    {
+                        if (args1 == "")
+                            return Error("Please enter an amount to take!");
+
+                        if (!float.TryParse(args1, out float amount))
+                            return Error("Please enter a valid amount!");
+
+                        if (amount <= 0)
+                            return Error("Please enter a valid amount!");
+
+                        var joint = await Banker.api.GetJointAccountOfPlayer(Context.Player);
+                        if (joint == null)
+                            return Error("You are not in a joint account!");
+
+                        var bank = await Banker.api.RetrieveOrCreateBankAccount(Context.Player);
+
+                        if (joint.Currency < amount)
+                            return Error("The joint account doesn't have enough money!");
+
+                        joint.Currency -= amount;
+                        bank.Currency += amount;
+                        return Success("You took " + amount + " from the joint account!");
+                    }
+                case "deposit":
+                    {
+                        if (args1 == "")
+                            return Error("Please enter an amount to deposit!");
+
+                        if (!float.TryParse(args1, out float amount))
+                            return Error("Please enter a valid amount!");
+
+                        if (amount <= 0)
+                            return Error("Please enter a valid amount!");
+
+                        var joint = await Banker.api.GetJointAccountOfPlayer(Context.Player);
+                        if (joint == null)
+                            return Error("You are not in a joint account!");
+
+                        var bank = await Banker.api.RetrieveOrCreateBankAccount(Context.Player);
+
+                        if (bank.Currency < amount)
+                            return Error("You don't have enough money to do that!");
+
+                        joint.Currency += amount;
+                        bank.Currency -= amount;
+                        return Success("You deposited " + amount + " into the joint account!");
+                        
+                    }
                 case "accept":
                     {
                         if (String.IsNullOrEmpty(Context.Player.GetData<string>("jointinvite")) || Context.Player.GetData<string>("jointinvite") == "N.A")
