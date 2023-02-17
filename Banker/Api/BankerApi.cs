@@ -21,6 +21,14 @@ namespace Banker.Api
             new NpcCustomAmount(NPCID.EyeofCthulhu, 100, Color.Red),
             new NpcCustomAmount(NPCID.EaterofWorldsHead, 100, Color.MediumPurple),
             new NpcCustomAmount(NPCID.BrainofCthulhu, 100, Color.Red),
+            new NpcCustomAmount(NPCID.SkeletronHead, 100, Color.White),
+            new NpcCustomAmount(NPCID.Skeleton, 3, Color.Gray),
+            new NpcCustomAmount(NPCID.Pinky, 1000, Color.Pink),
+            new NpcCustomAmount(NPCID.DemonEye, 2, Color.DarkRed),
+            new NpcCustomAmount(NPCID.Zombie, 2, Color.DarkGreen),
+            new NpcCustomAmount(NPCID.BlueSlime, 1, Color.Blue),
+            new NpcCustomAmount(NPCID.GreenSlime, 1, Color.Green),
+            new NpcCustomAmount(NPCID.RedSlime, 2, Color.Red)
         };
 
         public async Task<JointAccount> CreateJointAccount(TSPlayer player, string name)

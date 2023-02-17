@@ -14,7 +14,7 @@ namespace Banker.Models
         public int reward;
         public Color color;
 
-        public NpcCustomAmount(NPCID npcID, int reward, Color color)
+        public NpcCustomAmount(short npcID, int reward, Color color)
         {
             this.npcID = npcID;
             this.reward = reward;

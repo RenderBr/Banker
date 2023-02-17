@@ -6,6 +6,7 @@ using CSF.TShock;
 using Microsoft.Xna.Framework;
 using MongoDB.Driver.Linq;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
 using Terraria;
@@ -136,70 +137,12 @@ namespace Banker
                     }
                 }
 
-                NpcCustomAmount customAmount = api.npcCustomAmounts.Where(x => x.npcID == npc.netID).FirstOrDefault();
+                NpcCustomAmount customAmount = api.npcCustomAmounts.FirstOrDefault(x=>x.npcID==npc.netID, null);
 
-                switch (npc.netID)
+                if(customAmount != null)
                 {
-                    case NPCID.EyeofCthulhu:
-                        {
-                            totalGiven = 100;
-                            color = Color.IndianRed;
-                            break;
-                        }
-                    case NPCID.EaterofWorldsBody:
-                        {
-                            totalGiven = 150;
-                            color = Color.MediumPurple;
-                            break;
-                        }
-                    case NPCID.SkeletronHead:
-                    {
-                        totalGiven = 150;
-                        color = Color.Gray;
-                        break;
-                    }
-                    case NPCID.Skeleton:
-                        {
-                            totalGiven = 3;
-                            color = Color.Gray;
-                            break;
-                        }
-                }
-
-                if (npc.netID == NPCID.Pinky)
-                {
-                    totalGiven = 1000;
-                    color = Color.Pink;
-                }
-
-                if (npc.netID == NPCID.DemonEye)
-                {
-                    totalGiven = 2;
-                    color = Color.DarkRed;
-                }
-
-                if (npc.netID == NPCID.Zombie)
-                {
-                    totalGiven = 2;
-                    color = Color.DarkGreen;
-                }
-
-                if (npc.netID == NPCID.BlueSlime)
-                {
-                    totalGiven = 1;
-                    color = Color.Blue;
-                }
-
-                if (npc.netID == NPCID.GreenSlime)
-                {
-                    totalGiven = 1;
-                    color = Color.Green;
-                }
-
-                if (npc.netID == NPCID.RedSlime)
-                {
-                    totalGiven = 1;
-                    color = Color.Red;
+                    totalGiven = customAmount.reward;
+                    color = customAmount.color;
                 }
 
                 var Player = await api.RetrieveOrCreateBankAccount(player.Account.Name);
