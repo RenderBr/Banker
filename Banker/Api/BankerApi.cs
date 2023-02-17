@@ -143,10 +143,13 @@ namespace Banker.Api
         {
             var acc = await RetrieveBankAccount(player);
 
-            if (string.IsNullOrEmpty(acc.JointAccount))
-                return false;
+            #if DEBUG
+            Console.WriteLine(string.IsNullOrEmpty(acc.JointAccount));
+            Console.WriteLine(acc.JointAccount);
+            Console.WriteLine(acc.IsInJointAccount());
+            #endif
 
-            return true;
+            return acc.IsInJointAccount();
         }
 
         public async Task<float> GetCurrency(TSPlayer Player)

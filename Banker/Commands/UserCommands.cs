@@ -56,9 +56,20 @@ namespace Banker.Modules
                     Respond("/joint create <name>");
                     Respond("/joint invite <name>");
                     Respond("/joint take <amount>");
+                    Respond("/joint bal");
                     Respond("/joint deposit <amount>");
                     Respond("/joint leave");
                     return Success("Enjoy joint banking!");
+                case "balance":
+                case "bal":
+                case "money":
+                    {
+                        var joint = await Banker.api.GetJointAccountOfPlayer(Context.Player);
+                        if (joint == null)
+                            return Error("You are not in a joint account!");
+
+                        return Respond($"The joint account currently has {Math.Round(joint.Currency)} {(joint.Currency == 1 ? _settings.CurrencyNameSingular : _settings.CurrencyNamePlural)}", Color.LightGoldenrodYellow);
+                    }
                 case "take":
                     {
                         if (args1 == "")

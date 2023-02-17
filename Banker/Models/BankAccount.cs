@@ -13,5 +13,7 @@ namespace Banker.Models
         public string _jointAccount = string.Empty;
 
         public string JointAccount { get => _jointAccount; set { _ = this.SaveAsync(x => x.JointAccount, value); _jointAccount = value; } }
+
+        public bool IsInJointAccount() => !string.IsNullOrEmpty(JointAccount);
     }
 }
