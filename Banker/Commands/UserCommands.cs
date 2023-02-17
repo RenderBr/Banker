@@ -55,8 +55,6 @@ namespace Banker.Modules
                     Respond("Once somebody has been added to it, they cannot be removed unless they voluntarily leave. The commands are:");
                     Respond("/joint create <name>");
                     Respond("/joint invite <name>");
-                    Respond("/joint accept");
-                    Respond("/joint deny");
                     Respond("/joint take <amount>");
                     Respond("/joint deposit <amount>");
                     Respond("/joint leave");

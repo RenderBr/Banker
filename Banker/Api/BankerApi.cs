@@ -75,8 +75,9 @@ namespace Banker.Api
         public async Task<bool> AddUserToJointAccount(string player, string jointAccount)
         {
             var acc = await RetrieveOrCreateBankAccount(player);
-
-            if (await IsAlreadyInJointAccount(player) == true)
+            bool cannotJoin = await IsAlreadyInJointAccount(player);
+            
+            if (cannotJoin == true)
                 return false;
 
             acc.JointAccount = jointAccount;
@@ -126,11 +127,10 @@ namespace Banker.Api
         {
             var p = await RetrieveBankAccount(player);
 
-            if(p.JointAccount != string.Empty)
-            {
-                return await RetrieveJointAccount(p.JointAccount);
-            }
-            return null;
+            if (string.IsNullOrEmpty(p.JointAccount))
+                return null;
+            
+            return await RetrieveJointAccount(p.JointAccount);
         }
 
         public async Task<JointAccount> GetJointAccountOfPlayer(TSPlayer player)

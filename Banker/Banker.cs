@@ -30,13 +30,13 @@ namespace Banker
             => "Banker";
 
         public override Version Version
-            => new(1, 1);
+            => new(1, 2);
 
         public override string Author
             => "Average";
 
         public override string Description
-            => "An economy plugin intended to be used on TBC.";
+            => "A modern and simple economy plugin, designed to replace SEConomy.";
         #endregion
 
         public Banker(Main game) : base(game)
@@ -92,10 +92,6 @@ namespace Banker
                     args.Player.SendMessage($"You lost {toLose} {((toLose == 1) ? settings.CurrencyNameSingular : settings.CurrencyNamePlural)} from dying!", Color.Orange);
                     return;
                 }
-            }
-            else
-            {
-                return;
             }
         }
 
