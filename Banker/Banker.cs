@@ -1,10 +1,8 @@
-﻿using Auxiliary;
-using Auxiliary.Configuration;
+﻿using Auxiliary.Configuration;
 using Banker.Api;
 using Banker.Models;
 using CSF.TShock;
 using Microsoft.Xna.Framework;
-using MongoDB.Driver.Linq;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -104,7 +102,7 @@ namespace Banker
 
             if (settings.EnableMobDrops == false)
                 return;
-            
+
             var npc = Main.npc[args.number];
 
             if (args.ignoreClient == -1)
@@ -133,9 +131,9 @@ namespace Banker
                     }
                 }
 
-                NpcCustomAmount customAmount = api.npcCustomAmounts.FirstOrDefault(x=>x.npcID==npc.netID, null);
+                NpcCustomAmount customAmount = api.npcCustomAmounts.FirstOrDefault(x => x.npcID == npc.netID, null);
 
-                if(customAmount != null)
+                if (customAmount != null)
                 {
                     totalGiven = customAmount.reward;
                     color = customAmount.color;
@@ -157,7 +155,7 @@ namespace Banker
             {
                 if (plr is null || !(plr.Active && plr.IsLoggedIn))
                     continue;
-                
+
                 if (plr.Account is null)
                     continue;
 

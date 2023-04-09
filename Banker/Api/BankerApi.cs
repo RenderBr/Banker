@@ -1,22 +1,20 @@
 ﻿using Auxiliary;
+using Auxiliary.Configuration;
 using Banker.Models;
-using IL.Terraria.GameContent.Bestiary;
 using Microsoft.Xna.Framework;
 using MongoDB.Driver;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Terraria.ID;
 using TShockAPI;
+using static Banker.Models.LinkedBankAccount;
 
 namespace Banker.Api
 {
     public class BankerApi
     {
-        public List<NpcCustomAmount> npcCustomAmounts = new List<NpcCustomAmount>()
+        public List<NpcCustomAmount> npcCustomAmounts = new()
         {
             new NpcCustomAmount(NPCID.EyeofCthulhu, 100, Color.Red),
             new NpcCustomAmount(NPCID.EaterofWorldsHead, 100, Color.MediumPurple),
@@ -35,10 +33,10 @@ namespace Banker.Api
         {
             JointAccount acc = null;
 
-            if(await IsAlreadyInJointAccount(player) == true)
+            if (await IsAlreadyInJointAccount(player) == true)
                 return acc;
 
-            if(await IModel.GetAsync(GetRequest.Bson<JointAccount>(x => x.Name == name)) == null)
+            if (await IModel.GetAsync(GetRequest.Bson<JointAccount>(x => x.Name == name)) == null)
             {
                 acc = await IModel.GetAsync(GetRequest.Bson<JointAccount>(x => x.Name == name), x =>
                 {
@@ -53,7 +51,7 @@ namespace Banker.Api
         }
 
         public async Task GetBalanceOfJointAccount(string jointAccount)
-            => await RetrieveJointAccount(jointAccount).GetAwaiter().GetResult().GetCurrency();
+            => RetrieveJointAccount(jointAccount).GetAwaiter().GetResult().GetCurrency();
 
         public async Task<bool> UpdateJointBalance(string jointAccount, int newAmount)
         {
@@ -76,7 +74,7 @@ namespace Banker.Api
         {
             var acc = await RetrieveOrCreateBankAccount(player);
             bool cannotJoin = await IsAlreadyInJointAccount(player);
-            
+
             if (cannotJoin == true)
                 return false;
 
@@ -94,13 +92,14 @@ namespace Banker.Api
         {
             var acc = await GetJointAccountOfPlayer(player);
 
-            if (acc != null) {
+            if (acc != null)
+            {
                 return false;
             }
 
             var p = TSPlayer.FindByNameOrID(player).First();
             p.SetData<string>("jointinvite", jointAccount);
-            
+
             p.SendMessage("You have been invited to join a joint bank account: " + jointAccount, Color.Yellow);
             p.SendMessage("Accept the request with /joint accept, or deny it with /joint deny. ", Color.Yellow);
             return true;
@@ -129,7 +128,7 @@ namespace Banker.Api
 
             if (string.IsNullOrEmpty(p.JointAccount))
                 return null;
-            
+
             return await RetrieveJointAccount(p.JointAccount);
         }
 
@@ -143,11 +142,11 @@ namespace Banker.Api
         {
             var acc = await RetrieveBankAccount(player);
 
-            #if DEBUG
+#if DEBUG
             Console.WriteLine(string.IsNullOrEmpty(acc.JointAccount));
             Console.WriteLine(acc.JointAccount);
             Console.WriteLine(acc.IsInJointAccount());
-            #endif
+#endif
 
             return acc.IsInJointAccount();
         }
@@ -189,27 +188,38 @@ namespace Banker.Api
             return true;
         }
 
-        public List<BankAccount> TopBalances(int limit = 10)
+        public IEnumerable<IBankAccount> TopBalances(int limit = 10)
         {
+
+            if (Configuration<BankerSettings>.Settings.LinkedMode)
+            {
+                int c = (int)StorageProvider.GetLinkedCollection<LinkedBankAccount>("LinkedBankAccounts").Find(x => true).SortByDescending(x => x.Currency).CountDocuments();
+                if (c < limit)
+                    limit = c;
+
+
+                return StorageProvider.GetLinkedCollection<LinkedBankAccount>("LinkedBankAccounts").Find(x => true).SortByDescending(x => x.Currency).Limit(limit).ToList();
+            }
+
             int e = (int)StorageProvider.GetMongoCollection<BankAccount>("BankAccounts").Find(x => true).SortByDescending(x => x.Currency).CountDocuments();
             if (e < limit)
                 limit = e;
-            
-            
+
+
             return StorageProvider.GetMongoCollection<BankAccount>("BankAccounts").Find(x => true).SortByDescending(x => x.Currency).Limit(limit).ToList();
         }
 
-        public async Task<BankAccount> RetrieveBankAccount(TSPlayer player)
+        public async Task<IBankAccount> RetrieveBankAccount(TSPlayer player)
             => await RetrieveBankAccount(player.Account.Name);
 
-        public async Task<BankAccount> RetrieveOrCreateBankAccount(TSPlayer player)
+        public async Task<IBankAccount> RetrieveOrCreateBankAccount(TSPlayer player)
             => await RetrieveOrCreateBankAccount(player.Account.Name);
 
-        public async Task<BankAccount> RetrieveBankAccount(string name)
-            => await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName.ToLower() == name.ToLower()));
+        public async Task<IBankAccount> RetrieveBankAccount(string name)
+            => Configuration<BankerSettings>.Settings.LinkedMode == true ? await IModel.GetAsync(GetRequest.Linked<LinkedBankAccount>(x => x.AccountName == name), x => x.AccountName = name) : await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName == name), x => x.AccountName = name);
 
-        public async Task<BankAccount> RetrieveOrCreateBankAccount(string name) 
-            => await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName == name), x => x.AccountName = name);
+        public async Task<IBankAccount> RetrieveOrCreateBankAccount(string name)
+            => Configuration<BankerSettings>.Settings.LinkedMode == true ? await IModel.GetAsync(GetRequest.Linked<LinkedBankAccount>(x => x.AccountName == name), x => x.AccountName = name) : await IModel.GetAsync(GetRequest.Bson<BankAccount>(x => x.AccountName == name), x => x.AccountName = name);
 
     }
 }

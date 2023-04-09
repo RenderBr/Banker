@@ -1,5 +1,4 @@
-﻿using Auxiliary;
-using Auxiliary.Configuration;
+﻿using Auxiliary.Configuration;
 using Banker.Models;
 using CSF;
 using CSF.TShock;
@@ -10,7 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TShockAPI;
-using TShockAPI.DB;
+using static Banker.Models.LinkedBankAccount;
 
 namespace Banker.Modules
 {
@@ -35,7 +34,7 @@ namespace Banker.Modules
 
                 if (balance == -1)
                     return Error("Invalid player name! Try using their user account name.");
-                
+
                 return Respond($"{user} currently has {Math.Round(balance)} {(balance == 1 ? _settings.CurrencyNameSingular : _settings.CurrencyNamePlural)}", Color.LightGoldenrodYellow);
 
             }
@@ -117,7 +116,7 @@ namespace Banker.Modules
                         joint.Currency += amount;
                         bank.Currency -= amount;
                         return Success("You deposited " + amount + " into the joint account!");
-                        
+
                     }
                 case "accept":
                     {
@@ -190,9 +189,9 @@ namespace Banker.Modules
 
         [Command("baltop", "topbal", "topbalance", "leaderboard")]
         [Description("Shows the top ten users with the highest balance.")]
-        public async Task<IResult> TopBalance()
+        public IResult TopBalance()
         {
-            List<BankAccount> topList = Banker.api.TopBalances(8);
+            List<BankAccount> topList = (List<BankAccount>)Banker.api.TopBalances(8);
 
             Respond($"Top Users by Balance (/baltop)", Color.LightGoldenrodYellow);
 
@@ -212,13 +211,13 @@ namespace Banker.Modules
             // no args
             if (user == "")
                 return Error("Please enter a username! Ex. /pay Ollie <quantity>");
-            
+
             if (pay == null)
                 return Error($"Please enter a quantity to pay the user! Ex. /pay {user} 1000");
-            
+
             if (pay <= 0)
                 return Error($"Please enter a valid quantity, must be a positive number! (You entered: {pay})");
-            
+
             if (user == Context.Player.Name)
                 return Error($"You cannot pay yourself money!");
 
@@ -227,7 +226,7 @@ namespace Banker.Modules
 
             if (paidUser == null)
                 return Error("Invalid player name!");
-            
+
             if (payingUser == null)
                 return Error("Something went wrong!");
 

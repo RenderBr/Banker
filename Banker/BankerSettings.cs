@@ -29,5 +29,8 @@ namespace Banker
 
         [JsonPropertyName("PercentageDroppedOnDeath")]
         public double PercentageDroppedOnDeath { get; set; } = 0;
+
+        [JsonPropertyName("EnableLinkedMode")]
+        public bool LinkedMode { get; set; }
     }
 }

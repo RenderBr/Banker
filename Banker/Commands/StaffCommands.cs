@@ -1,6 +1,4 @@
-﻿using Auxiliary;
-using Auxiliary.Configuration;
-using Banker.Models;
+﻿using Auxiliary.Configuration;
 using CSF;
 using CSF.TShock;
 using System.Linq;
@@ -77,7 +75,7 @@ namespace Banker.Modules
         {
             // no args
             if (user == "")
-                return Error("Please enter a username! Ex. /sb Trifle 10000");  
+                return Error("Please enter a username! Ex. /sb Trifle 10000");
 
             if (pay == null)
                 return Error($"Please enter a quantity to set this user's balance to! Ex. /sb {user} 1000");
