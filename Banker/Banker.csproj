@@ -5,7 +5,7 @@
 
 	<NoWarn>MSB3270</NoWarn>
 
-	<Version>1.2</Version>
+	<Version>1.3</Version>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CSF.NET.TShock" Version="1.4.1" />

@@ -5,11 +5,9 @@ using CSF.TShock;
 using Microsoft.Xna.Framework;
 using MongoDB.Driver;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TShockAPI;
-using static Banker.Models.LinkedBankAccount;
 
 namespace Banker.Modules
 {
@@ -175,16 +173,12 @@ namespace Banker.Modules
                         var success = await Banker.api.InviteUserToJointAccount(acc.Name, joint.Name);
 
                         if (success)
-                        {
                             return Success("You have invited " + acc.Name + " to your joint account!");
-                        }
                         else
-                        {
                             return Error("That player is already apart of a joint account!");
-                        }
                     }
             }
-            
+
         }
 
         [Command("baltop", "topbal", "topbalance", "leaderboard")]
