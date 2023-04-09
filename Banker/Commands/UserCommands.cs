@@ -184,18 +184,18 @@ namespace Banker.Modules
                         }
                     }
             }
-
+            
         }
 
         [Command("baltop", "topbal", "topbalance", "leaderboard")]
         [Description("Shows the top ten users with the highest balance.")]
         public IResult TopBalance()
         {
-            List<BankAccount> topList = (List<BankAccount>)Banker.api.TopBalances(8);
+            var topList = Banker.api.TopBalances(8).ToList();
 
             Respond($"Top Users by Balance (/baltop)", Color.LightGoldenrodYellow);
 
-            foreach (BankAccount account in topList)
+            foreach (IBankAccount account in topList)
             {
                 Respond($"{topList.IndexOf(account) + 1}. {account.AccountName} - {Math.Round(account.Currency)} {(account.Currency == 1 ? _settings.CurrencyNameSingular : _settings.CurrencyNamePlural)}", Color.LightGreen);
             }
