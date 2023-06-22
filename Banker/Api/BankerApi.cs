@@ -5,7 +5,6 @@ using Microsoft.Xna.Framework;
 using MongoDB.Driver;
 using Terraria.ID;
 using TShockAPI;
-using static Banker.Models.LinkedBankAccount;
 
 namespace Banker.Api
 {

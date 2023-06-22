@@ -76,7 +76,7 @@ namespace Banker
 				var player = await api.RetrieveOrCreateBankAccount(args.Player.Account.Name);
 				var toLose = (float)(player.Currency * settings.PercentageDroppedOnDeath);
 				player.Currency -= toLose;
-				
+
 				if (settings.AnnounceMobDrops)
 				{
 					args.Player.SendMessage($"You lost {toLose} {((toLose == 1) ? settings.CurrencyNameSingular : settings.CurrencyNamePlural)} from dying!", Color.Orange);
