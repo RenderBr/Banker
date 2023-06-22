@@ -9,6 +9,7 @@ using Terraria.ID;
 using TerrariaApi.Server;
 using TShockAPI;
 using TShockAPI.Hooks;
+using Timer = System.Timers.Timer;
 
 namespace Banker
 {
@@ -21,17 +22,13 @@ namespace Banker
 		private readonly TSCommandFramework _fx;
 
 		#region Plugin metadata
-		public override string Name
-			=> "Banker";
+		public override string Name => "Banker";
 
-		public override Version Version
-			=> new(1, 2);
+		public override Version Version => new(1, 3);
 
-		public override string Author
-			=> "Average";
+		public override string Author => "Average";
 
-		public override string Description
-			=> "A modern and simple economy plugin, designed to replace SEConomy.";
+		public override string Description => "A modern and robust economy plugin, designed to replace SEConomy.";
 		#endregion
 
 		public Banker(Main game) : base(game)
@@ -45,7 +42,7 @@ namespace Banker
 		{
 			Configuration<BankerSettings>.Load("Banker");
 
-			//Reload Event
+			// Reload Event
 			GeneralHooks.ReloadEvent += (x) =>
 			{
 				Configuration<BankerSettings>.Load("Banker");
@@ -55,24 +52,21 @@ namespace Banker
 			TShockAPI.GetDataHandlers.KillMe += PlayerDead;
 			ServerApi.Hooks.NetSendData.Register(this, OnNpcStrike);
 
-			#region Reward Timer initialization
+			// Reward Timer initialization
 			if (Configuration<BankerSettings>.Settings.RewardsForPlaying)
 			{
-				_rewardTimer = new(Configuration<BankerSettings>.Settings.RewardTimer)
+				_rewardTimer = new Timer(Configuration<BankerSettings>.Settings.RewardTimer)
 				{
 					AutoReset = true
 				};
-				_rewardTimer.Elapsed += async (_, x)
-					=> await Rewards(x);
+				_rewardTimer.Elapsed += async (_, x) => await Rewards(x);
 				_rewardTimer.Start();
 			}
-
-
-			#endregion
 
 			await _fx.BuildModulesAsync(typeof(Banker).Assembly);
 		}
 
+		// On player death event method
 		public async void PlayerDead(object sender, GetDataHandlers.KillMeEventArgs args)
 		{
 			if (args.Player.IsLoggedIn && Configuration<BankerSettings>.Settings.PercentageDroppedOnDeath > 0)
@@ -82,6 +76,7 @@ namespace Banker
 				var player = await api.RetrieveOrCreateBankAccount(args.Player.Account.Name);
 				var toLose = (float)(player.Currency * settings.PercentageDroppedOnDeath);
 				player.Currency -= toLose;
+				
 				if (settings.AnnounceMobDrops)
 				{
 					args.Player.SendMessage($"You lost {toLose} {((toLose == 1) ? settings.CurrencyNameSingular : settings.CurrencyNamePlural)} from dying!", Color.Orange);
@@ -90,75 +85,49 @@ namespace Banker
 			}
 		}
 
+		// On mob death event method
 		public async void OnNpcStrike(SendDataEventArgs args)
 		{
 			BankerSettings settings = Configuration<BankerSettings>.Settings;
 
-			if (args.MsgId != PacketTypes.NpcStrike)
-				return;
-
-			if (settings.EnableMobDrops == false)
+			if (args.MsgId != PacketTypes.NpcStrike || !settings.EnableMobDrops)
 				return;
 
 			var npc = Main.npc[args.number];
 
-			if (args.ignoreClient == -1)
+			if (args.ignoreClient == -1 || !(npc.life <= 0) || npc.type == NPCID.TargetDummy || npc.SpawnedFromStatue)
 				return;
 
 			var player = TSPlayer.FindByNameOrID(args.ignoreClient.ToString())[0];
-			Color color;
+			Color color = Color.Gold;
 
-			if (!(npc.life <= 0))
+			if (settings.ExcludedMobs.Contains(npc.netID))
 				return;
 
-			color = Color.Gold;
+			NpcCustomAmount customAmount = api.npcCustomAmounts.FirstOrDefault(x => x.npcID == npc.netID);
 
-			if (npc.type != NPCID.TargetDummy && !npc.SpawnedFromStatue)
-			{
+			int totalGiven = customAmount != null ? customAmount.reward : 1;
+			color = customAmount?.color ?? color;
 
-				int totalGiven = 1;
+			var playerAccount = await api.RetrieveOrCreateBankAccount(player.Account.Name);
+			playerAccount.Currency += totalGiven;
 
-
-				if (settings.ExcludedMobs.Count > 0)
-				{
-					foreach (var mob in settings.ExcludedMobs)
-					{
-						if (npc.netID == mob)
-							return;
-					}
-				}
-
-				NpcCustomAmount customAmount = api.npcCustomAmounts.FirstOrDefault(x => x.npcID == npc.netID, null);
-
-				if (customAmount != null)
-				{
-					totalGiven = customAmount.reward;
-					color = customAmount.color;
-				}
-
-				var Player = await api.RetrieveOrCreateBankAccount(player.Account.Name);
-				Player.Currency += totalGiven;
-
-				if (settings.AnnounceMobDrops == true)
-					player.SendMessage($"+ {totalGiven} {((totalGiven == 1) ? settings.CurrencyNameSingular : settings.CurrencyNamePlural)} from killing {npc.FullName}", color);
-
-				return;
-			}
+			if (settings.AnnounceMobDrops)
+				player.SendMessage($"+ {totalGiven} {(totalGiven == 1 ? settings.CurrencyNameSingular : settings.CurrencyNamePlural)} from killing {npc.FullName}", color);
 		}
 
+		// timer callback event method
 		private static async Task Rewards(ElapsedEventArgs _)
 		{
 			foreach (TSPlayer plr in TShock.Players)
 			{
-				if (plr is null || !(plr.Active && plr.IsLoggedIn))
-					continue;
-
-				if (plr.Account is null)
+				if (plr == null || !plr.Active || !plr.IsLoggedIn || plr.Account == null)
 					continue;
 
 				var player = await api.RetrieveOrCreateBankAccount(plr.Account.Name);
 				player.Currency++;
 			}
 		}
+
 	}
 }
