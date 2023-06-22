@@ -11,14 +11,13 @@ namespace Banker.Modules
 	[RequirePermission("tbc.user")]
 	internal class UserCommands : TSModuleBase<TSCommandContext>
 	{
-		readonly BankerSettings _settings = Configuration<BankerSettings>.Settings;
+		private readonly BankerSettings _settings = Configuration<BankerSettings>.Settings;
 
 		[Command("balance", "bank", "eco", "bal")]
 		[Description("Displays the user's balance.")]
 		public async Task<IResult> CheckBalance(string user = "")
 		{
-			// no args
-			if (user == "")
+			if (string.IsNullOrEmpty(user))
 			{
 				float balance = await Banker.api.GetCurrency(Context.Player);
 				return Respond($"You currently have {Math.Round(balance)} {(balance == 1 ? _settings.CurrencyNameSingular : _settings.CurrencyNamePlural)}", Color.LightGoldenrodYellow);
@@ -31,7 +30,6 @@ namespace Banker.Modules
 					return Error("Invalid player name! Try using their user account name.");
 
 				return Respond($"{user} currently has {Math.Round(balance)} {(balance == 1 ? _settings.CurrencyNameSingular : _settings.CurrencyNamePlural)}", Color.LightGoldenrodYellow);
-
 			}
 		}
 
@@ -69,10 +67,7 @@ namespace Banker.Modules
 						if (args1 == "")
 							return Error("Please enter an amount to take!");
 
-						if (!float.TryParse(args1, out float amount))
-							return Error("Please enter a valid amount!");
-
-						if (amount <= 0)
+						if (!float.TryParse(args1, out float amount) || amount <= 0)
 							return Error("Please enter a valid amount!");
 
 						var joint = await Banker.api.GetJointAccountOfPlayer(Context.Player);
@@ -90,17 +85,14 @@ namespace Banker.Modules
 					}
 				case "deposit":
 					{
-						if (args1 == "")
+						if (string.IsNullOrWhiteSpace(args1))
 							return Error("Please enter an amount to deposit!");
 
-						if (!float.TryParse(args1, out float amount))
-							return Error("Please enter a valid amount!");
-
-						if (amount <= 0)
+						if (!float.TryParse(args1, out float amount) || amount <= 0)
 							return Error("Please enter a valid amount!");
 
 						var joint = await Banker.api.GetJointAccountOfPlayer(Context.Player);
-						if (joint == null)
+						if (joint is null)
 							return Error("You are not in a joint account!");
 
 						var bank = await Banker.api.RetrieveOrCreateBankAccount(Context.Player);
@@ -111,11 +103,10 @@ namespace Banker.Modules
 						joint.Currency += amount;
 						bank.Currency -= amount;
 						return Success("You deposited " + amount + " into the joint account!");
-
 					}
 				case "accept":
 					{
-						if (String.IsNullOrEmpty(Context.Player.GetData<string>("jointinvite")) || Context.Player.GetData<string>("jointinvite") == "N.A")
+						if (string.IsNullOrEmpty(Context.Player.GetData<string>("jointinvite")) || Context.Player.GetData<string>("jointinvite") == "N.A")
 							return Error("You have not been invited to any joint accounts");
 
 						var invite = Context.Player.GetData<string>("jointinvite");
@@ -135,7 +126,7 @@ namespace Banker.Modules
 						}
 					}
 				case "deny":
-					if (String.IsNullOrEmpty(Context.Player.GetData<string>("jointinvite")) || Context.Player.GetData<string>("jointinvite") == "N.A")
+					if (string.IsNullOrEmpty(Context.Player.GetData<string>("jointinvite")) || Context.Player.GetData<string>("jointinvite") == "N.A")
 						return Error("You have not been invited to any joint accounts");
 
 					Context.Player.RemoveData("jointinvite");
@@ -143,28 +134,27 @@ namespace Banker.Modules
 				case "make":
 				case "create":
 					{
-						if (args1 == "")
+						if (string.IsNullOrWhiteSpace(args1))
 							return Error("Please enter a name for your joint account!");
 
 						JointAccount acc = await Banker.api.CreateJointAccount(Context.Player, args1);
 
-						if (acc == null)
+						if (acc is null)
 							return Error("Either you are already in a joint account or there is one by that name!");
 
 						return Success("Congratz! You now have a joint account.");
 					}
 				case "invite":
 					{
-						if (args1 == "")
+						if (string.IsNullOrWhiteSpace(args1))
 							return Error("Please enter the name of a player you want to invite!");
 
 						var joint = await Banker.api.GetJointAccountOfPlayer(Context.Player);
-						if (joint == null)
+						if (joint is null)
 							return Error("You are not in a joint account!");
 
-
 						var acc = TShock.UserAccounts.GetUserAccountByName(args1);
-						if (acc == null)
+						if (acc is null)
 							return Error("The player name you entered was invalid!");
 
 						var success = await Banker.api.InviteUserToJointAccount(acc.Name, joint.Name);
@@ -172,10 +162,9 @@ namespace Banker.Modules
 						if (success)
 							return Success("You have invited " + acc.Name + " to your joint account!");
 						else
-							return Error("That player is already apart of a joint account!");
+							return Error("That player is already a part of a joint account!");
 					}
 			}
-
 		}
 
 		[Command("baltop", "topbal", "topbalance", "leaderboard")]
@@ -193,17 +182,16 @@ namespace Banker.Modules
 			return ExecuteResult.FromSuccess();
 		}
 
-
 		[Command("pay", "transfer", "etransfer")]
 		[RequirePermission("transfer")]
 		[Description("Transfers user currency from your account to another.")]
 		public async Task<IResult> Transfer(string user = "", float? pay = null)
 		{
 			// no args
-			if (user == "")
+			if (string.IsNullOrWhiteSpace(user))
 				return Error("Please enter a username! Ex. /pay Ollie <quantity>");
 
-			if (pay == null)
+			if (pay is null)
 				return Error($"Please enter a quantity to pay the user! Ex. /pay {user} 1000");
 
 			if (pay <= 0)
@@ -215,10 +203,10 @@ namespace Banker.Modules
 			var paidUser = await Banker.api.RetrieveBankAccount(user);
 			var payingUser = await Banker.api.RetrieveBankAccount(Context.Player.Account.Name);
 
-			if (paidUser == null)
+			if (paidUser is null)
 				return Error("Invalid player name!");
 
-			if (payingUser == null)
+			if (payingUser is null)
 				return Error("Something went wrong!");
 
 			if (!(payingUser.Currency >= pay))
